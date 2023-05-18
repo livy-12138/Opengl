@@ -1,0 +1,112 @@
+
+#include <GL/glut.h>
+ 
+//默认视角：在原点往z轴负方向看
+ 
+void SetupRC(void)
+{
+	//设置窗口背景颜色为白色
+	glClearColor(1.0f, 1.0f, 1.0f,1.0f);
+}
+ 
+//绘制三角形
+void DrawTriangle(void)
+{
+	glBegin(GL_TRIANGLES);
+	glVertex2f(0.0f,0.0f);
+	glVertex2f(40.0f,0.0f);
+	glVertex2f(20.0f,40.0f);
+	glEnd();
+}
+void DrawPolygon(void)
+{
+	glBegin(GL_POLYGON);
+	glVertex2f(5.0f,-40.0f);
+	glVertex2f(35.0f,-40.0f);
+	glVertex2f(35.0f,0.0f);
+	glVertex2f(5.0f,0.0f);
+	glEnd();
+}
+
+void ChangeSize(int w,int h)
+{
+	if (h == 0)
+		h = 1;
+	glViewport(0,0,w,h);
+ 
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+ 
+	//设置裁剪空间
+	if (w <= h)
+		glOrtho(-100.0f, 100.0f, -100.0f*h/w, 100.0f*h/w, -100.0f, 100.0f);
+	else
+		glOrtho(-100.0f*w/h, 100.0f*w/h, -100.0f, 100.0f, -100.0f, 100.0f);
+ 
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+}
+ 
+void RenderScene(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+ 
+ 
+	//绘制出第一个红色的三角形
+	glColor3f(1.0f,0.0f,0.0f);
+	DrawTriangle();
+	//绘制出第一个紫色多边形
+	glColor3f(0.5f,0.3f,0.5f);
+	DrawPolygon();
+ 
+	//绘制出逆时针旋转200度角的绿色三角形
+ 
+	glRotatef(200.0f,0.0f,0.0f,1.0f);
+	glColor3f(0.0f,1.0f,0.0f);
+	DrawTriangle();
+
+	glLoadIdentity();//回到原点
+
+	//给上面的绿色三角形画一个树干
+
+	glColor3f(0.8f,0.0f,0.3f);
+	glTranslatef(-14.0f,-5.0f,0.0f);
+	glRotatef(200.0f,0.0f,0.0f,1.0f);
+	glScalef(0.3f,1.2f,1.0f);
+	DrawPolygon();
+	//这一步非常关键, 因为OpenGL效果累加，必须回到原点
+	glLoadIdentity(); 
+   
+ 
+	//绘制出沿x轴负反向平移120单位的黄色三角形
+	glTranslatef(-80.0f,-50.0f,0.0f);
+	glColor3f(1.0f,1.0f,0.0f);
+	DrawTriangle();
+	glColor3f(0.5f,0.3f,0.0f);
+	DrawPolygon();
+ 
+ 
+	//glLoadIdentity();
+	glTranslatef(120.0f,0.0f,0.0f); //向x轴正方向平移120
+	glScalef(1.0f,2.0f,100.0f);
+	glColor3f(0.0f,0.0f,1.0f);
+	DrawTriangle();
+	glColor3f(0.7f,0.3f,0.3f);
+	DrawPolygon();
+
+	glutSwapBuffers();
+ 
+}
+ 
+int main(int argc,char *argv[])
+{
+	//glutInit is used to initialize the GLUT library
+	glutInit(&argc,argv);
+	glutInitDisplayMode(GLUT_DOUBLE|GLUT_RGB);
+	glutCreateWindow("变换示例");
+	glutDisplayFunc(RenderScene);
+	glutReshapeFunc(ChangeSize);
+	SetupRC();
+	glutMainLoop();
+	return 0;
+}

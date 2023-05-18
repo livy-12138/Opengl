@@ -1,0 +1,61 @@
+
+#include <GL/glut.h>
+#include <stdio.h>
+#include <math.h>
+#define pi 3.14159
+void init(void)
+{
+	glClearColor(1.0,1.0,1.0,0.0);
+	glMatrixMode(GL_PROJECTION);
+	gluOrtho2D(0.0,1800.0,0.0,1200.0);
+}
+void SetPoint(GLint x,GLint y)
+{
+	glBegin(GL_POINTS);
+	glVertex2i(x,y);
+	glEnd();
+}
+void DrawSin(void)
+{
+	//Asin((1/B)*x)---[0,pi/2]
+	int A=200;
+	int B=200;
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(1,0,0);
+	float xc=300,yc=300;
+	float dx=B*pi/2,dy=A;													//起点减去终点（起点默认为（0，0）终点默认为（pi/2，1））
+	float x=0,y=0;															//给x,y赋初值
+	SetPoint(0,0);															//画出起点
+	float p=0;																//给决策系数赋值
+	while(x<dx)																//限制x在斜率在[0,1]之间，保证x始终为步长
+	{
+		p=A*sin((x+1)/B);														//计算下一个x所对应的y值
+		x++;																//步长累加
+		float t=y+1/2;
+		printf("决策参数是%f\n",p);
+		printf("下一个y的一半是%f\n",t);
+		if(p>=t)														//决策系数p是否大于下一个点的一半
+			y++;															//若大于一半则y累加
+		SetPoint(x+xc,y+yc);														//画点
+		float X1=pi-x+xc+B*pi,	X2=-x+xc,	X3=-pi+x+xc+B*pi;
+		float Y1=y+yc,			Y2=-y+yc,	Y3=-y+yc;
+		SetPoint(X1,Y1);
+		SetPoint(X2,Y2);
+		SetPoint(X3,Y3);
+	}
+
+	glFlush();
+}
+void main (int argc, char** argv)
+{
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_SINGLE|GLUT_RGB);
+	glutInitWindowPosition(50,100);
+	glutInitWindowSize(1800,600);
+	glutCreateWindow("An Example OpenGL Program");
+
+	init();
+	glutDisplayFunc(DrawSin);
+	glutMainLoop();
+}
+

@@ -1,0 +1,177 @@
+
+#include <stdlib.h>
+#include <math.h>
+#include <GL/glut.h>
+/***********************画一个点***************************/
+void setPixel (GLint xCoord,GLint yCoord)
+{
+	glBegin(GL_POINTS);
+		glVertex2i(xCoord,yCoord);
+	glEnd();
+}
+void init (void)
+{
+	glClearColor (1,1,1,0);
+	
+	gluOrtho2D(0,400,0,300);
+}
+/*************************bres画线***************************/
+void lineBres (GLfloat x0,GLfloat y0,GLfloat xEnd,GLfloat yEnd)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(0,0,0);
+	float v;
+	v=fabs((yEnd-y0)/(xEnd-x0));
+	if (v<=1)
+	{
+		int dx =fabs (xEnd-x0),dy =fabs(yEnd-x0);
+		int p=2*dy-dx;
+		int twoDy=2*dy,twoDyMinusDx=2*(dy-dx);
+		int x,y;
+		
+		if (x0>xEnd)
+		{
+			x=xEnd;
+			y=yEnd;
+			xEnd=x0;
+		}
+		else
+		{
+			x=x0;
+			y=y0;
+		}
+		setPixel(x,y);
+		
+		while(x<xEnd){
+			x++;
+			if(p<0)
+				p+=twoDy;
+			else{
+				y++;
+				p+=twoDyMinusDx;
+			}
+			setPixel(x,y);
+		}
+	}
+	else
+	{
+
+	}
+	glFlush();
+}
+/*******************定义点********************/
+class wcPt2D{
+public:
+	GLfloat x, y;
+};
+	wcPt2D winMin={20,100};
+	wcPt2D winMax={420,400};
+	wcPt2D p1={20,100};
+	wcPt2D p2={420,400};
+/******************四舍五入**********************/
+inline GLint round(const GLfloat a){return GLint(a+0.5);}
+/*********************对方向进行编码******************/
+const GLint winLeftBitCode=0x1;
+const GLint winRightBitCode=0x2;
+const GLint winBottomBitCode=0x4;
+const GLint winTopBitCode=0x8;
+/*******************根据点的位置返回编码*********************/
+inline GLint inside (GLint code){return GLint(!code);}
+inline GLint reject (GLint code1,GLint code2){return GLint (code1&code2);}
+inline GLint accept (GLint code1,GLint code2){return GLint (!code1|code2);}
+/*********************根据位置进行编码计算（从四个方向变成八个方向）******************************/
+GLubyte encode (wcPt2D pt,wcPt2D winMin,wcPt2D winMax)
+{
+	GLubyte code = 0x00;
+
+	if(pt.x<winMin.x)
+		code=code|winLeftBitCode;
+	if(pt.x>winMax.x)
+		code=code|winRightBitCode;
+	if(pt.x<winMin.y)
+		code=code|winBottomBitCode;
+	if(pt.x>winMax.y)
+		code=code|winTopBitCode;
+return (code);
+}
+/*******************两点交换值*************************/
+void swapPts(wcPt2D*p1,wcPt2D*p2)
+{
+	wcPt2D tmp;
+	tmp = *p1;
+	*p1=*p2;
+	*p2=tmp;
+}
+/*******************两个编码码交换值***********************/
+void swapCodes(GLubyte*c1,GLubyte*c2)
+{
+	GLubyte tmp;
+	tmp=*c1;
+	*c1=*c2;
+	*c2=tmp;
+}
+/********************CS线段裁剪************************/
+void lineClipCohSuth(void)
+{
+	wcPt2D winMin={20,100};
+	wcPt2D winMax={420,400};
+	wcPt2D p1={20,100};
+	wcPt2D p2={420,400};
+	GLubyte code1,code2;
+	GLint done = false,plotLine = false;
+	GLfloat m;
+	while(!done){
+		code1 = encode(p1,winMin,winMax);
+		code2 = encode(p2,winMin,winMax);
+		if (accept(code1,code2)){
+			done = true;
+			plotLine = true;
+		}
+		else
+			if(reject(code1,code2))
+				done=true;
+			else{
+				if(inside (code1)){
+					swapPts(&p1,&p2);
+					swapCodes(&code1,&code2);
+				}
+				if(p2.x!=p1.x)
+					m=(p2.y=p1.y)/(p2.x-p1.x);
+				if(code1&winLeftBitCode){
+					p1.y+=(winMax.x-p1.x)*m;
+					p1.x+=winMin.x;
+				}
+				else
+					if(code1&winRightBitCode){
+						p1.y+=(winMax.x-p1.x)*m;
+						p1.x=winMax.x;
+					}
+					else
+						if(code1&winBottomBitCode){
+							if(p2.x!=p1.x)
+								p1.x+=(winMin.y-p1.y)/m;
+							p1.y=winMin.y;
+						}
+						else
+							if(code1&winTopBitCode){
+								if(p2.x!=p1.x)
+									p1.x+=(winMax.y);
+							}
+			}
+	}
+	if(plotLine)
+		lineBres(round(p1.x),round(p1.y),round(p2.x),round(p2.y));
+}
+
+void main (int argc, char** argv)
+{
+	glutInit (&argc,argv);
+	glutInitDisplayMode(GLUT_SINGLE|GLUT_RGB);
+	glutInitWindowPosition(20,100);
+	glutInitWindowSize(400,300);
+	glutCreateWindow("An Example");
+
+	init();
+	glutDisplayFunc(lineClipCohSuth);
+	glutMainLoop();
+}

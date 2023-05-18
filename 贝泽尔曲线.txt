@@ -1,0 +1,136 @@
+#include<GL/glut.h>
+#include<stdlib.h>
+#include<math.h>
+
+GLsizei winWidth =600,winHeight=600;
+GLfloat x=100.0,y=0.0,z=50.0;
+GLfloat xref=10.0,yref=10.0,zref=0.0;
+GLfloat Vx=10.0,Vy=0.0,Vz=0.0;
+GLfloat xwcMin=-50.0,xwcMax=50.0;
+GLfloat ywcMin=-50.0,ywcMax=50.0;
+GLfloat dnear=25.0,dfar=125.0;
+
+class wcPt3D{
+public:
+	GLfloat x,y,z;
+};
+void displayCube(void)
+{
+	glClearColor(1,1,1,0);
+	glColor3f(0,0,0);
+	glBegin(GL_LINE_STRIP);
+	glVertex3f(-20,-20,-20);
+	glVertex3f(-20,20,-20);
+	glVertex3f(-20,20,20);
+	glVertex3f(20,20,20);
+	glEnd();
+
+	glColor3f(1,0,0);
+	glBegin(GL_LINES);
+	glVertex3f(100,0,0);
+	glVertex3f(0,0,0);
+	glEnd();
+
+	glColor3f(0,1,0);
+	glBegin(GL_LINES);
+	glVertex3f(0,0,100);
+	glVertex3f(0,0,0);
+	glEnd();
+
+	glColor3f(0,0,1);
+	glBegin(GL_LINES);
+	glVertex3f(0,100,0);
+	glVertex3f(0,0,0);
+	glEnd();
+
+	glFlush();
+}
+void init (void)
+{
+	glClearColor(1,1,1,0);
+	gluLookAt(20,20,20,0,0,0,0,1,0);
+}
+
+void plotPoint (wcPt3D bezCurvePt)
+{
+	glBegin (GL_POINTS);
+	glVertex3f(bezCurvePt.x,bezCurvePt.y,bezCurvePt.z);
+	glEnd();
+}
+
+void binomialCoeffs (GLint n,GLint *C)
+{
+	GLint k,j;
+	for (k=0;k<=n;k++){
+		C[k]=1;
+		for(j=n;j>=k+1;j--)
+			C[k]*=j;
+		for(j=n-k;j>=2;j--)
+			C[k]/=j;
+	}
+}
+
+void computeBezPt (GLfloat u,wcPt3D * bezPt,GLint nCtrlPts,wcPt3D * ctrlPts,GLint * C)
+{
+	GLint k,n=nCtrlPts-1;
+	GLfloat bezBlendFcn;
+
+	bezPt->x=bezPt->y=bezPt->z=0.0;
+	for (k=0;k<nCtrlPts;k++){
+		bezBlendFcn=C[k]*pow(u,k)*pow(1-u,n-k);
+		bezPt->x+=ctrlPts [k].x*bezBlendFcn;
+        bezPt->y+=ctrlPts [k].y*bezBlendFcn;
+        bezPt->z+=ctrlPts [k].z*bezBlendFcn;
+	}
+}
+
+void bezier (wcPt3D * ctrlPts,GLint nCtrlPts,GLint nBezCurvePts)
+{
+	wcPt3D bezCurvePt;
+	GLfloat u;
+	GLint *C,k;
+	C=new GLint [nCtrlPts];
+	binomialCoeffs (nCtrlPts-1,C);
+	for (k=0;k<=nBezCurvePts;k++){
+		u=GLfloat (k) / GLfloat (nBezCurvePts);
+		computeBezPt(u,&bezCurvePt,nCtrlPts,ctrlPts,C);
+		plotPoint(bezCurvePt);
+	}
+	delete[] C;
+}
+
+void displayFcn(void)
+{
+	GLint nCtrlPts=4,nBezCurvePts=1000;
+	wcPt3D ctrlPts[4]={{-20,-20,-20},{-20,20,-20},{-20,20,20},{20,20,20}};
+	glClear (GL_COLOR_BUFFER_BIT);
+	glPointSize(4);
+	displayCube();
+	glColor3f(1,0,0);
+
+	bezier(ctrlPts,nCtrlPts,nBezCurvePts);
+	glFlush();
+}
+
+void winReshapeFcn(GLint newWidth,GLint newHeight)
+{
+	glViewport(0,0,newHeight,newHeight);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(xwcMin,xwcMax,ywcMin,ywcMax,5,300);
+	glClear(GL_COLOR_BUFFER_BIT);
+}
+
+void main(GLint argc,char** argv)
+{
+	glutInit(&argc,argv);
+	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+	glutInitWindowPosition(50,50);
+	glutInitWindowSize(winWidth,winHeight);	
+	glutCreateWindow("Bezier Curve");
+	init();
+	glutDisplayFunc(displayFcn);
+	glutReshapeFunc(winReshapeFcn);
+
+	glutMainLoop();
+}

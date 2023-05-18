@@ -1,0 +1,107 @@
+
+#include<GL/glut.h>
+
+int X0=0;
+int Y0=0;
+void init()
+{	glClearColor(1.0,1.0,1.0,0.0);
+	glMatrixMode(GL_PROJECTION);
+	gluOrtho2D(0,0,100,100);
+	glViewport(0,0,500,500);
+}
+void MoveWindow(GLint newWidth,GLint newHeight,GLint Xwmin,GLint Ywmin)
+{
+	glLoadIdentity();
+	glMatrixMode(GL_PROJECTION);
+	glViewport(0,0,1000,900);
+	int Xwmax=Xwmin+newWidth;
+	int Ywmax=Ywmin+newHeight;
+	gluOrtho2D(Xwmin,Xwmax,Ywmin,Ywmax);
+}
+void Draw(void)
+{
+	glColor3f(1.0,0.0,0.0);
+	glPolygonMode(GL_FRONT,GL_FILL );
+	glBegin(GL_TRIANGLE_STRIP);
+		glVertex2i(0,40);
+		glVertex2i(20,50);
+		glVertex2i(40,70);
+		glVertex2i(60,20);
+		glVertex2i(100,80);
+		glVertex2i(120,120);
+		glVertex2i(150,40);
+		glVertex2i(170,150);
+		glVertex2i(210,300);
+		glVertex2i(310,110);
+	glEnd();
+	glFlush();
+}
+void MydisplayFcn(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	Draw();
+}
+void Plot_Boundary_Line(int xmin,int xmax,int ymax,int ymin)
+{
+	glColor4f(0.0,1.0,0.0,0.5);
+	glPolygonMode(GL_FRONT,GL_LINE);
+	glBegin(GL_QUADS);
+		glVertex2i(xmin,ymin);
+		glVertex2i(xmin,ymax);
+		glVertex2i(xmax,ymax);
+		glVertex2i(xmax,ymin);
+	glEnd();
+	glFlush();
+}
+void Move (int xmin,int ymin)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	MydisplayFcn();
+
+	X0=X0+xmin;
+	Y0=Y0+ymin;	
+	MoveWindow(100,100,X0,Y0);
+	Plot_Boundary_Line(X0,X0+100,Y0,Y0+100);
+
+}
+void moveviewport (GLubyte curvePlotKey,GLint xMouse, GLint yMouse)
+{
+	GLint xmin=0,ymin=0;
+
+	switch(curvePlotKey)
+	{
+	case'w':
+		ymin+=10;;
+		Move ( xmin, ymin);
+		break;
+	case'a':
+		xmin-=10;
+		Move ( xmin, ymin);
+		break;
+	case's':
+		ymin-=10;
+		Move ( xmin, ymin);
+		break;
+	case'd':
+		xmin+=10;
+		Move ( xmin, ymin);
+		break;
+	default:
+		break;
+	}
+	glFlush();
+}
+void main(int argc,char**argv)
+{
+	glutInit(&argc,argv);
+	glutInitDisplayMode(GLUT_SINGLE|GLUT_RGB);
+	glutInitWindowPosition(100,100);
+	glutInitWindowSize(1000,900);
+	glutCreateWindow("Move");
+	
+	init();
+	glutDisplayFunc(MydisplayFcn);
+	glutKeyboardFunc(moveviewport);
+
+	glutMainLoop();
+}

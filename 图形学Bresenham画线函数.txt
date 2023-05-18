@@ -1,0 +1,76 @@
+#include <stdlib.h>
+#include <math.h>
+#include <GL/glut.h>
+
+void setPixel (GLint xCoord,GLint yCoord)
+{
+	glBegin(GL_POINTS);
+		glVertex2i(xCoord,yCoord);
+	glEnd();
+}
+void init (void)
+{
+	glClearColor (1,1,1,0);
+	
+	gluOrtho2D(0,400,0,300);
+}
+
+
+void lineBresenham (void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glColor3f(0,0,0);
+	int x0=180,y0=15,xEnd=10,yEnd=145;
+	float v;
+	v=fabs((yEnd-y0)/(xEnd-x0));
+	if (v<=1)
+	{
+		int dx =fabs (xEnd-x0),dy =fabs(yEnd-x0);
+		int p=2*dy-dx;
+		int twoDy=2*dy,twoDyMinusDx=2*(dy-dx);
+		int x,y;
+		
+		if (x0>xEnd)
+		{
+			x=xEnd;
+			y=yEnd;
+			xEnd=x0;
+		}
+		else
+		{
+			x=x0;
+			y=y0;
+		}
+		setPixel(x,y);
+		
+		while(x<xEnd){
+			x++;
+			if(p<0)
+				p+=twoDy;
+			else{
+				y++;
+				p+=twoDyMinusDx;
+			}
+			setPixel(x,y);
+		}
+	}
+	else
+	{
+
+	}
+	glFlush();
+}
+
+
+void main (int argc, char** argv)
+{
+	glutInit (&argc,argv);
+	glutInitDisplayMode(GLUT_SINGLE|GLUT_RGB);
+	glutInitWindowPosition(20,100);
+	glutInitWindowSize(400,300);
+	glutCreateWindow("An Example");
+
+	init();
+	glutDisplayFunc(lineBresenham);
+	glutMainLoop();
+}
